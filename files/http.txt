@@ -1,0 +1,14 @@
+POST /api/hub/text2image HTTP/1.1
+Host: creator.bid
+User-Agent: insomnia/10.3.0
+x-api-key: API_KEY_HERE
+Content-Type: application/json
+Content-Length: <calculated length>
+
+{
+  "prompt": "YOUR_PROMPT",
+  "seed": 1222554541154578123,
+  "loraName": "YOUR_MODEL",
+  "height": 1024,
+  "width": 1024
+}

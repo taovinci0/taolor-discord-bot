@@ -1,0 +1,63 @@
+import requests
+import base64
+import re
+from PIL import Image
+import io
+
+url = "https://creator.bid/api/hub/text2image"
+headers = {
+    "Content-Type": "application/json",
+    "User-Agent": "insomnia/10.3.0",
+    "x-api-key": "YOUR_API_KEY"
+}
+data = {
+    "prompt": "YOUR_PROMPT",
+    "seed": 12225545335178123, #Never use the same seed two times. It wont work, only with another prompt as before. You should build a 'randomizer' for seeds.
+    "loraName": "YOUR_MODEL",
+    "height": 1024,
+    "width": 1024
+}
+
+response = requests.post(url, json=data, headers=headers)
+
+print("Status code:", response.status_code)
+
+# Attempt to parse JSON from the response
+try:
+    resp_json = response.json()
+    print("Response JSON:", resp_json)
+except ValueError:
+    print("Response is not valid JSON. Raw text:", response.text)
+    exit()
+
+# Check if 'image' is in the response
+if response.status_code == 200 and "image" in resp_json:
+    # The API returns something like:
+    # "image": "data:image/jpeg;base64,/9j/4AA..."
+    image_data_url = resp_json["image"]
+
+    # 1. Remove the "data:image/...;base64," prefix if present
+    if image_data_url.startswith("data:image"):
+        # Split at the first comma; index [1] is the actual base64 string
+        base64_part = image_data_url.split(",", 1)[1]
+    else:
+        # If there's no prefix, assume the whole string is base64
+        base64_part = image_data_url
+
+    # 2. Decode the base64 string into raw bytes
+    image_bytes = base64.b64decode(base64_part)
+
+    # 3. Save to a file
+    with open("output.png", "wb") as f:
+        f.write(image_bytes)
+    print("Image saved to output.png")
+
+    # 4. Optionally display the image (requires a GUI and PIL installed)
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        img.show()
+    except Exception as e:
+        print("Could not display the image (headless environment or PIL error):", e)
+
+else:
+    print("No valid 'image' field found, or request failed.")

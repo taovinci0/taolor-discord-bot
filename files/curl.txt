@@ -1,0 +1,12 @@
+curl --request POST \
+  --url https://creator.bid/api/hub/text2image \
+  --header 'Content-Type: application/json' \
+  --header 'User-Agent: insomnia/10.3.0' \
+  --header 'x-api-key: API_KEY_HERE' \
+  --data '{
+  "prompt": "YOUR_PROMPT",
+  "seed": 1222554541154578123,
+  "loraName": "YOUR_LORA_NAME",
+  "height": 1024,
+  "width": 1024
+}'

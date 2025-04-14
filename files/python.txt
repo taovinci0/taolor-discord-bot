@@ -1,0 +1,20 @@
+import requests
+
+url = "https://creator.bid/api/hub/text2image"
+headers = {
+    "Content-Type": "application/json",
+    "User-Agent": "insomnia/10.3.0",
+    "x-api-key": "YOUR_API_KEY"
+}
+data = {
+    "prompt": "YOUR_PROMPT",
+    "seed": 1222554541154578123, #Never use the same seed two times. It wont work, only with another prompt as before. You should build a 'randomizer' for seeds.
+    "loraName": "YOUR_LORA_NAME",
+    "height": 1024,
+    "width": 1024
+}
+
+response = requests.post(url, json=data, headers=headers)
+
+print(response.status_code)
+print(response.json())  # Prints the response as JSON

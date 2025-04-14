@@ -1,0 +1,17 @@
+const response = await fetch('https://creator.bid/api/hub/text2image', {
+  method: 'POST',
+  headers: {
+    'x-api-key': 'YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    prompt: "YOUR_PROMPT",
+    seed: 1222554541154578123,
+    loraName: "YOUR_MODEL",
+    height: 1024,
+    width: 1024
+  })
+});
+
+const data = await response.json();
+console.log(data);
