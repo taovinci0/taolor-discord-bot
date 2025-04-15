@@ -1,11 +1,19 @@
 # Taolor Discord Bot
 
-A Discord bot that generates AI images using the Creator.bid API. The bot supports two different image generation commands:
+A Discord bot that generates AI images using the Creator.bid API and provides a welcoming community experience.
 
 ## Features
 
+### Image Generation
 - `/create-image-taolor` - Generates images of Taolor in various scenes with automatic prompt enhancement
 - `/create-image-taologo` - Generates images incorporating the Bittensor T Logo based on user descriptions
+
+### Community Features
+- **Automated Welcome Messages**: Creates personalized welcome threads with custom generated images for new members
+- Each new member gets their own welcome thread with:
+  - A personalized greeting message
+  - A custom generated welcome image featuring Michael Taolor
+  - Community guidelines and suggestions for engagement
 
 ## Setup
 
@@ -29,9 +37,17 @@ DISCORD_BOT_TOKEN=your_discord_bot_token
 ALLOWED_CHANNEL_ID=channel_id_for_taolor_command
 TAOLOGO_CHANNEL_ID=channel_id_for_logo_command
 APPLICATION_ID=your_discord_application_id
+WELCOME_CHANNEL_ID=your_welcome_channel_id
 ```
 
-4. Run the bot:
+4. Enable Required Bot Intents:
+   - Go to the Discord Developer Portal
+   - Select your application
+   - Navigate to the "Bot" section
+   - Enable the "Server Members Intent"
+   - Save changes
+
+5. Run the bot:
 ```bash
 python bot.py
 ```

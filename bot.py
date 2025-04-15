@@ -25,6 +25,7 @@ DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 ALLOWED_CHANNEL_ID = int(os.getenv("ALLOWED_CHANNEL_ID", 0))
 TAOLOGO_CHANNEL_ID = int(os.getenv("TAOLOGO_CHANNEL_ID", 0))
 APPLICATION_ID = int(os.getenv("APPLICATION_ID", 0))
+WELCOME_CHANNEL_ID = int(os.getenv("WELCOME_CHANNEL_ID", 0))
 
 # Rate limiting settings
 # Track the last request time per user
@@ -35,14 +36,19 @@ REQUEST_COOLDOWN = 30  # seconds between requests from the same user
 intents = discord.Intents.default()
 # We don't need message_content privileged intent for slash commands
 intents.message_content = False
+intents.members = True  # Enable member tracking
 bot = commands.Bot(command_prefix='!', intents=intents, application_id=APPLICATION_ID)
 
 @bot.event
 async def on_ready():
     # Set the bot's status to show as online with a custom status
-    await bot.change_presence(status=discord.Status.online, 
-                             activity=discord.Activity(type=discord.ActivityType.watching, 
-                                                     name="for /create-image commands"))
+    await bot.change_presence(
+        status=discord.Status.online,
+        activity=discord.Activity(
+            type=discord.ActivityType.watching,
+            name="over the Bittensor community"
+        )
+    )
     
     logger.info(f'{bot.user} has connected to Discord!')
     logger.info(f'Application ID: {APPLICATION_ID}')
@@ -61,6 +67,50 @@ async def on_app_command_error(interaction: discord.Interaction, error: app_comm
     logger.error(f"Command error: {error}")
     logger.error(traceback.format_exc())
     await interaction.response.send_message(f"An error occurred: {error}", ephemeral=True)
+
+@bot.event
+async def on_member_join(member: discord.Member):
+    """Handle new member joins"""
+    try:
+        # Get the welcome channel
+        welcome_channel = bot.get_channel(WELCOME_CHANNEL_ID)
+        if not welcome_channel:
+            logger.error(f"Could not find welcome channel with ID {WELCOME_CHANNEL_ID}")
+            return
+
+        # Create a personalized welcome message
+        welcome_message = (
+            f"🌟 Welcome to our community, {member.mention}! 🌟\n\n"
+            "I'm Michael Taolor, and I'm thrilled to have you join us. "
+            "This space is dedicated to innovation, learning, and meaningful discussions about AI, blockchain, and technology.\n\n"
+            "Feel free to:\n"
+            "• Introduce yourself and share your interests\n"
+            "• Ask questions and engage with our community\n"
+            "• Explore our various channels and resources\n\n"
+            "If you need any assistance, don't hesitate to ask. Let's create something amazing together! 🚀"
+        )
+
+        # Create a thread for the new member
+        thread_name = f"Welcome {member.name}! 👋"
+        thread = await welcome_channel.create_thread(
+            name=thread_name,
+            type=discord.ChannelType.public_thread,
+            auto_archive_duration=1440  # Archive after 24 hours
+        )
+
+        # Generate and send the welcome image
+        welcome_image = await generate_welcome_image(member.name)
+        
+        # Send the welcome message and image in the thread
+        if welcome_image:
+            await thread.send(welcome_message, file=welcome_image)
+        else:
+            await thread.send(welcome_message)
+
+        logger.info(f"Sent welcome message to {member.name} in thread {thread.name}")
+    except Exception as e:
+        logger.error(f"Error in welcome message: {e}")
+        logger.error(traceback.format_exc())
 
 def check_rate_limit(user_id):
     """Check if a user is rate limited"""
@@ -223,6 +273,43 @@ async def create_image_taologo(interaction: discord.Interaction, scene_descripti
     logger.debug(f"Scene description: {scene_description}")
     
     await generate_image(interaction, scene_description, "taolor-logo", TAOLOGO_CHANNEL_ID)
+
+async def generate_welcome_image(member_name: str) -> discord.File:
+    """Generate a welcome image for new members"""
+    try:
+        # Create a welcoming scene description
+        scene_description = f"A warm and inviting scene of Michael Taolor standing in a modern, well-lit entrance hall with soft ambient lighting. He is wearing smart casual attire and has a genuine, welcoming smile. He is making a welcoming gesture with his hands, as if greeting someone. The timestamp shows the current moment. The scene should feel warm, professional, and welcoming."
+        
+        # Use the existing image generation logic
+        url = "https://creator.bid/api/hub/text2image"
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Discord-Bot/1.0",
+            "x-api-key": CREATOR_API_KEY
+        }
+        data = {
+            "prompt": scene_description,
+            "seed": generate_random_seed(),
+            "loraName": "taolor-sfw",
+            "height": 1024,
+            "width": 1024
+        }
+        
+        logger.debug(f"Generating welcome image for {member_name}")
+        response = requests.post(url, json=data, headers=headers, timeout=60)
+        
+        if response.status_code == 200:
+            resp_json = response.json()
+            if "image" in resp_json:
+                image_bytes = decode_base64_image(resp_json["image"])
+                return discord.File(fp=image_bytes, filename="welcome.png")
+        
+        logger.error(f"Failed to generate welcome image: {response.status_code}")
+        return None
+    except Exception as e:
+        logger.error(f"Error generating welcome image: {e}")
+        logger.error(traceback.format_exc())
+        return None
 
 if __name__ == "__main__":
     # Check if required environment variables are set
